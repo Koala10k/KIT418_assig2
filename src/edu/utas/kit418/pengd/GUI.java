@@ -1,6 +1,7 @@
 package edu.utas.kit418.pengd;
 
 import java.awt.Dimension;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -42,6 +43,7 @@ public class GUI extends JFrame implements TaskDoneListener {
 	public GUI() {
 		setTitle("Cluster Computing GUI");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setIconImage(Toolkit.getDefaultToolkit().getImage("res/icon.png"));
 		createComponents();
 		performLayout();
 		adjust();
@@ -91,7 +93,7 @@ public class GUI extends JFrame implements TaskDoneListener {
 						&& Integer.parseInt(jTxtMxt1Cols.getText()) > 0 && Integer.parseInt(jTxtMxt1Cols.getText()) <= 100 && Integer.parseInt(jTxtMxt2Cols.getText()) > 0
 						&& Integer.parseInt(jTxtMxt2Cols.getText()) <= 100) {
 					ParallelMatrixMultiply.generateMatrix(Integer.parseInt(jTxtMxt1Rows.getText()), Integer.parseInt(jTxtMxt1Cols.getText()), Integer.parseInt(jTxtMxt2Cols.getText()));
-					ParallelMatrixMultiply.status = ParallelMatrixMultiply.STATE_MATRIX_INIT_READY;
+					ParallelMatrixMultiply.state = ParallelMatrixMultiply.STATE_MATRIX_INIT_READY;
 					jBtnCompute.setEnabled(true);
 				} else {
 					JOptionPane.showMessageDialog(GUI.this, "Error: <rows> or <cols> must be a positive integer ranging from 1 to 100", "Invalid parameter", JOptionPane.ERROR_MESSAGE);
@@ -103,8 +105,8 @@ public class GUI extends JFrame implements TaskDoneListener {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if (ParallelMatrixMultiply.status == ParallelMatrixMultiply.STATE_MATRIX_INIT_READY)
-					ParallelMatrixMultiply.status = ParallelMatrixMultiply.STATE_READY_TO_START;
+				if (ParallelMatrixMultiply.state == ParallelMatrixMultiply.STATE_MATRIX_INIT_READY)
+					ParallelMatrixMultiply.state = ParallelMatrixMultiply.STATE_READY_TO_START;
 			}
 		});
 
