@@ -1,9 +1,15 @@
 package edu.utas.kit418.pengd;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+
 import mpi.MPI;
 import mpi.Request;
 import edu.utas.kit418.pengd.manager.TaskManager;
 import edu.utas.kit418.pengd.model.Matrix;
+import edu.utas.kit418.pengd.utilities.ConfigParser;
 
 public class ParallelMatrixMultiply {
 	private static final int master = 0;
@@ -11,35 +17,68 @@ public class ParallelMatrixMultiply {
 	protected static final String PARTTEN_NUMBERS = "^[1-9]\\d*$";
 
 	public static String newline = System.getProperty("line.separator");
+	public static String slash = File.separator;
 	private static Matrix leftMatrix;
 	private static Matrix rightMatrix;
 	private static Matrix resultMatrix;
-	
+
 	private static GUI gui;
 
-	protected final static int STATE_INIT = 0;
-	protected final static int STATE_MATRIX_INIT_READY = 1;
-	protected final static int STATE_READY_TO_START = 2;
-	protected static int state = STATE_INIT;
+	private static boolean isGUI;
+	private static int param1;
+	private static int param2;
+	private static int param3;
+
+	protected enum State {
+		STATE_INIT, STATE_MATRIX_INIT_READY, STATE_READY_TO_START
+	}
+
+	protected static State state = State.STATE_INIT;
 	protected static int size;
-	
-	
+
 	private static TaskDoneListener taskDoneLst;
-	protected interface TaskDoneListener{
+
+	protected interface TaskDoneListener {
 		public void done(long l);
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 		MPI.Init(args);
 		int rank = MPI.COMM_WORLD.Rank();
 		size = MPI.COMM_WORLD.Size();
 
 		if (rank == master) {
-			gui = new GUI();
-			taskDoneLst = gui;
-			gui.setVisible(true);
+			File confFile = new File("bin"+File.separatorChar+"config.xml");
+			if (!confFile.exists()) {
+				try {
+					Files.copy(new File("res"+File.separatorChar+"ConfigTemplete.xml").toPath(), confFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				System.out.println("generating config file ...");
+			}
+			if (ConfigParser.parse(confFile) == ConfigParser.State.SUCCESS) {
+				isGUI = ConfigParser.getMode().equalsIgnoreCase("GUI");
+				param1 = ConfigParser.getRow1();
+				param2 = ConfigParser.getCol1row2();
+				param3 = ConfigParser.getCol2();
+			} else {
+				throw new Exception(ConfigParser.getErrMsg());
+			}
+
+			if (isGUI) {
+				printLog("starting in GUI mode...");
+				gui = new GUI();
+				taskDoneLst = gui;
+				gui.setInitParams(param1, param2, param3);
+				gui.setVisible(true);
+			} else {
+				printLog("starting in CMD mode...");
+				generateMatrix(param1, param2, param3);
+				state = State.STATE_READY_TO_START;
+			}
 			while (true) {
-				while (state != STATE_READY_TO_START) {
+				while (state != State.STATE_READY_TO_START) {
 					System.out.print("");
 				}
 				long startTime = System.currentTimeMillis();
@@ -69,8 +108,6 @@ public class ParallelMatrixMultiply {
 									data[j + leftMatrix.cols] = rightMatrix.col(pos[1])[j];
 								}
 								MPI.COMM_WORLD.Isend(data, 0, leftMatrix.cols * 2, MPI.INT, i, multiply);
-
-//								System.out.println("Assign task[" + pos[0] + "," + pos[1] + "] to node " + i);
 							}
 						}
 					}
@@ -88,7 +125,6 @@ public class ParallelMatrixMultiply {
 								} else {
 									resultMatrix.setValue(taskPos[0], taskPos[1], ret[0]);
 									nodeState[i - 1] = false;
-//									System.out.println("receive from node " + i);
 									if (!running1) {
 										boolean busy = false;
 										for (int j = 0; j < nodeState.length; j++)
@@ -101,14 +137,20 @@ public class ParallelMatrixMultiply {
 						}
 					}
 				}
-				// for (int i = 1; i < size; i++) {
-				// MPI.COMM_WORLD.Isend(new int[] { 0 }, 0, 1, MPI.INT, i,
-				// tag_bufSize);
-				// }
-
-				gui.log(resultMatrix.returnMatrix());
-				state = STATE_INIT;
-				taskDoneLst.done(System.currentTimeMillis()-startTime);
+				printLog(resultMatrix.returnMatrix());
+				if (isGUI) {
+					state = State.STATE_INIT;
+				} else{
+					for (int i = 1; i < size; i++) {
+						MPI.COMM_WORLD.Isend(new int[] { 0 }, 0, 1, MPI.INT, i, tag_bufSize);
+					}
+					break;
+				}
+				if (taskDoneLst != null) {
+					taskDoneLst.done(System.currentTimeMillis() - startTime);
+				} else {
+					System.out.println("Time Elapsed: " + (System.currentTimeMillis() - startTime));
+				}
 			}
 		} else {
 			while (true) {
@@ -122,13 +164,12 @@ public class ParallelMatrixMultiply {
 				for (int i = 0; i < recvbuf.length / 2; i++) {
 					rst += recvbuf[i] * recvbuf[i + bufSize[0]];
 				}
-				/*if (rank == 2)
-					try {
-						Thread.sleep(2000); // <----------------------------------------------sleep
-											// 2s to simulate network latency
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}*/
+				/*
+				 * if (rank == 2) try { Thread.sleep(2000); //
+				 * <----------------------------------------------sleep // 2s to
+				 * simulate network latency } catch (InterruptedException e) {
+				 * e.printStackTrace(); }
+				 */
 				MPI.COMM_WORLD.Send(new int[] { rst }, 0, 1, MPI.INT, master, result);
 			}
 		}
@@ -136,15 +177,24 @@ public class ParallelMatrixMultiply {
 	}
 
 	public static void generateMatrix(int row1, int col1row2, int col2) {
-		gui.log("generating..."+newline);
+		printLog("generating..." + newline);
 		try {
 			leftMatrix = new Matrix(row1, col1row2, true, "Left Matrix");
 			rightMatrix = new Matrix(col1row2, col2, true, "Right Matrix");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
-		gui.log(leftMatrix.returnMatrix());
-		gui.log(rightMatrix.returnMatrix());
+
+		printLog(leftMatrix.returnMatrix());
+		printLog(rightMatrix.returnMatrix());
 	}
+
+	private static void printLog(String msg) {
+		if (gui != null) {
+			gui.log(msg);
+		} else {
+			System.out.println(msg);
+		}
+	}
+
 }

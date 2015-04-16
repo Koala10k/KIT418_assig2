@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<configuration>
+    <!-- mode: GUI, CMD -->
+    <mode>
+        CMD
+    </mode>
+    <input>
+        <row1>5</row1>
+        <col1row2>5</col1row2>
+        <col2>5</col2>
+    </input>
+</configuration>

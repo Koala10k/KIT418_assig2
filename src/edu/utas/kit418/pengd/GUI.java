@@ -4,6 +4,7 @@ import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 
 import javax.swing.BorderFactory;
 import javax.swing.GroupLayout;
@@ -43,7 +44,7 @@ public class GUI extends JFrame implements TaskDoneListener {
 	public GUI() {
 		setTitle("Cluster Computing GUI");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setIconImage(Toolkit.getDefaultToolkit().getImage("res/icon.png"));
+		setIconImage(Toolkit.getDefaultToolkit().getImage("res"+File.separatorChar+"icon.png"));
 		createComponents();
 		performLayout();
 		adjust();
@@ -66,15 +67,15 @@ public class GUI extends JFrame implements TaskDoneListener {
 		jBtnClearLog = new JButton("Clear Log");
 		jBtnGenerate = new JButton("Generate");
 		jBtnCompute = new JButton("Compute");
-		jLblMxt1Rows = new JLabel("Amount of rows of Matrix 1 [1-100]:");
-		jLblMxt1Cols = new JLabel("Amount of cols of Matrix 1 [1-100]:");
-		jLblMxt2Cols = new JLabel("Amount of cols of Matrix 2 [1-100]:");
-		jTxtMxt1Rows = new JTextField("4");
-		jTxtMxt1Cols = new JTextField("4");
-		jTxtMxt2Cols = new JTextField("4");
+		jLblMxt1Rows = new JLabel("Amount of rows of Matrix 1 [1-500]:");
+		jLblMxt1Cols = new JLabel("Amount of cols of Matrix 1 [1-500]:");
+		jLblMxt2Cols = new JLabel("Amount of cols of Matrix 2 [1-500]:");
+		jTxtMxt1Rows = new JTextField();
+		jTxtMxt1Cols = new JTextField();
+		jTxtMxt2Cols = new JTextField();
 		jLblWorkerNodes = new JLabel("Amount of Workers: " + (ParallelMatrixMultiply.size - 1));
 		jLblTimeElapsed = new JLabel("Time Elapsed: 0");
-		
+
 		jBtnCompute.setEnabled(false);
 		jBtnClearLog.addActionListener(new ActionListener() {
 
@@ -89,11 +90,11 @@ public class GUI extends JFrame implements TaskDoneListener {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (jTxtMxt1Rows.getText().matches(ParallelMatrixMultiply.PARTTEN_NUMBERS) && jTxtMxt1Cols.getText().matches(ParallelMatrixMultiply.PARTTEN_NUMBERS)
-						&& jTxtMxt2Cols.getText().matches(ParallelMatrixMultiply.PARTTEN_NUMBERS) && Integer.parseInt(jTxtMxt1Rows.getText()) > 0 && Integer.parseInt(jTxtMxt1Rows.getText()) <= 100
-						&& Integer.parseInt(jTxtMxt1Cols.getText()) > 0 && Integer.parseInt(jTxtMxt1Cols.getText()) <= 100 && Integer.parseInt(jTxtMxt2Cols.getText()) > 0
-						&& Integer.parseInt(jTxtMxt2Cols.getText()) <= 100) {
+						&& jTxtMxt2Cols.getText().matches(ParallelMatrixMultiply.PARTTEN_NUMBERS) && Integer.parseInt(jTxtMxt1Rows.getText()) > 0 && Integer.parseInt(jTxtMxt1Rows.getText()) <= 1000
+						&& Integer.parseInt(jTxtMxt1Cols.getText()) > 0 && Integer.parseInt(jTxtMxt1Cols.getText()) <= 1000 && Integer.parseInt(jTxtMxt2Cols.getText()) > 0
+						&& Integer.parseInt(jTxtMxt2Cols.getText()) <= 1000) {
 					ParallelMatrixMultiply.generateMatrix(Integer.parseInt(jTxtMxt1Rows.getText()), Integer.parseInt(jTxtMxt1Cols.getText()), Integer.parseInt(jTxtMxt2Cols.getText()));
-					ParallelMatrixMultiply.state = ParallelMatrixMultiply.STATE_MATRIX_INIT_READY;
+					ParallelMatrixMultiply.state = ParallelMatrixMultiply.State.STATE_MATRIX_INIT_READY;
 					jBtnCompute.setEnabled(true);
 				} else {
 					JOptionPane.showMessageDialog(GUI.this, "Error: <rows> or <cols> must be a positive integer ranging from 1 to 100", "Invalid parameter", JOptionPane.ERROR_MESSAGE);
@@ -105,14 +106,14 @@ public class GUI extends JFrame implements TaskDoneListener {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if (ParallelMatrixMultiply.state == ParallelMatrixMultiply.STATE_MATRIX_INIT_READY)
-					ParallelMatrixMultiply.state = ParallelMatrixMultiply.STATE_READY_TO_START;
+				if (ParallelMatrixMultiply.state == ParallelMatrixMultiply.State.STATE_MATRIX_INIT_READY)
+					ParallelMatrixMultiply.state = ParallelMatrixMultiply.State.STATE_READY_TO_START;
 			}
 		});
 
 		jSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, jScrollPane, controlPane);
 		jSplit.setOneTouchExpandable(true);
-		
+
 	}
 
 	private void performLayout() {
@@ -165,12 +166,12 @@ public class GUI extends JFrame implements TaskDoneListener {
 								.addComponent(jTxtMxt2Cols, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, Short.MAX_VALUE)).addComponent(jLblWorkerNodes).addComponent(jLblTimeElapsed));
 		pack();
 	}
-	
+
 	private void adjust() {
-//		setExtendedState(getExtendedState() | JFrame.MAXIMIZED_BOTH);
+		// setExtendedState(getExtendedState() | JFrame.MAXIMIZED_BOTH);
 		jSplit.setDividerLocation(0.7);
 	}
-	
+
 	public void log(String info) {
 		logPane.append(info);
 		logPane.append(ParallelMatrixMultiply.newline);
@@ -180,6 +181,12 @@ public class GUI extends JFrame implements TaskDoneListener {
 	public void done(long timeElpased) {
 		jBtnCompute.setEnabled(false);
 		jLblTimeElapsed.setText("Time Elapsed: " + timeElpased + "ms");
+	}
+
+	public void setInitParams(int param1, int param2, int param3) {
+		jTxtMxt1Rows.setText(String.valueOf(param1));
+		jTxtMxt1Cols.setText(String.valueOf(param2));
+		jTxtMxt2Cols.setText(String.valueOf(param3));
 	}
 
 }
