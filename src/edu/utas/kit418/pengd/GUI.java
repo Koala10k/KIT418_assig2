@@ -54,13 +54,13 @@ public class GUI extends JFrame implements TaskDoneListener {
 
 		logPane = new JTextArea();
 		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-		logPane.setLineWrap(true);
+		logPane.setLineWrap(false);
 		logPane.setWrapStyleWord(true);
 		logPane.setEditable(false);
 
-		jScrollPane = new JScrollPane(logPane);
+		jScrollPane = new JScrollPane(logPane, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		jScrollPane.setBorder(BorderFactory.createTitledBorder("Log"));
-
+		
 		controlPane = new JPanel();
 		controlPane.setBorder(BorderFactory.createTitledBorder("Options"));
 
@@ -174,7 +174,6 @@ public class GUI extends JFrame implements TaskDoneListener {
 
 	public void log(String info) {
 		logPane.append(info);
-		logPane.append(ParallelMatrixMultiply.newline);
 	}
 
 	@Override

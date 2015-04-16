@@ -1,1 +1,3 @@
 java -jar %MPJ_HOME%\lib\starter.jar -np 9 -cp .;bin/ edu.utas.kit418.pengd.ParallelMatrixMultiply
+
+-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=8000

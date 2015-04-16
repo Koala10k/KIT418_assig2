@@ -42,7 +42,7 @@ public class ParallelMatrixMultiply {
 		public void done(long l);
 	}
 
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args){
 		MPI.Init(args);
 		int rank = MPI.COMM_WORLD.Rank();
 		size = MPI.COMM_WORLD.Size();
@@ -51,7 +51,7 @@ public class ParallelMatrixMultiply {
 			File confFile = new File("config.xml");
 			if (!confFile.exists()) {
 				try {
-					Files.copy(new File("res"+File.separatorChar+"ConfigTemplete.xml").toPath(), confFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+					Files.copy(new File("res" + File.separatorChar + "ConfigTemplete.xml").toPath(), confFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -63,7 +63,7 @@ public class ParallelMatrixMultiply {
 				param2 = ConfigParser.getCol1row2();
 				param3 = ConfigParser.getCol2();
 			} else {
-				throw new Exception(ConfigParser.getErrMsg());
+				printErr(ConfigParser.getErrMsg());
 			}
 
 			if (isGUI) {
@@ -83,7 +83,7 @@ public class ParallelMatrixMultiply {
 				}
 				long startTime = System.currentTimeMillis();
 				try {
-					resultMatrix = new Matrix(leftMatrix.rows, rightMatrix.cols, false, "Result");
+					resultMatrix = new Matrix(leftMatrix.rows, rightMatrix.cols, false, "Result Matrix");
 				} catch (Exception e) {
 				}
 				boolean[] nodeState = new boolean[size - 1];
@@ -140,16 +140,15 @@ public class ParallelMatrixMultiply {
 				printLog(resultMatrix.returnMatrix());
 				if (isGUI) {
 					state = State.STATE_INIT;
-				} else{
+				} else {
 					for (int i = 1; i < size; i++) {
 						MPI.COMM_WORLD.Isend(new int[] { 0 }, 0, 1, MPI.INT, i, tag_bufSize);
 					}
+					printLog("Time Elapsed: " + (System.currentTimeMillis() - startTime) + "ms");
 					break;
 				}
 				if (taskDoneLst != null) {
 					taskDoneLst.done(System.currentTimeMillis() - startTime);
-				} else {
-					System.out.println("Time Elapsed: " + (System.currentTimeMillis() - startTime));
 				}
 			}
 		} else {
@@ -176,13 +175,18 @@ public class ParallelMatrixMultiply {
 		MPI.Finalize();
 	}
 
+	private static void printErr(String msg) {
+		System.err.println("Error: "+msg);
+		System.exit(1);
+	}
+
 	public static void generateMatrix(int row1, int col1row2, int col2) {
-		printLog("generating..." + newline);
+		printLog("generating matrix...");
 		try {
 			leftMatrix = new Matrix(row1, col1row2, true, "Left Matrix");
 			rightMatrix = new Matrix(col1row2, col2, true, "Right Matrix");
 		} catch (Exception e) {
-			e.printStackTrace();
+			printErr(e.getMessage());
 		}
 
 		printLog(leftMatrix.returnMatrix());
@@ -191,7 +195,7 @@ public class ParallelMatrixMultiply {
 
 	private static void printLog(String msg) {
 		if (gui != null) {
-			gui.log(msg);
+			gui.log(msg + newline);
 		} else {
 			System.out.println(msg);
 		}

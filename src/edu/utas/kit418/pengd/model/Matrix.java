@@ -78,13 +78,13 @@ public class Matrix {
 
 	public String returnMatrix() {
 		StringBuffer sb = new StringBuffer();
-		sb.append(name);
+		sb.append(name+"("+rows+"x"+cols+")");
 		sb.append(":");
 		sb.append(ParallelMatrixMultiply.newline);
 		
 		for (int i = 0; i < rows; i++) {
 			for (int j = 0; j < cols; j++) {
-				sb.append(value[i * cols + j] + " ");
+				sb.append(value[i * cols + j] + "\t");
 			}
 			sb.append(ParallelMatrixMultiply.newline);
 		}
