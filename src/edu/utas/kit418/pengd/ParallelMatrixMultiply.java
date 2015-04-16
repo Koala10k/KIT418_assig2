@@ -48,14 +48,14 @@ public class ParallelMatrixMultiply {
 		size = MPI.COMM_WORLD.Size();
 
 		if (rank == master) {
-			File confFile = new File("bin"+File.separatorChar+"config.xml");
+			File confFile = new File("config.xml");
 			if (!confFile.exists()) {
 				try {
 					Files.copy(new File("res"+File.separatorChar+"ConfigTemplete.xml").toPath(), confFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-				System.out.println("generating config file ...");
+				System.out.println("generating config file...");
 			}
 			if (ConfigParser.parse(confFile) == ConfigParser.State.SUCCESS) {
 				isGUI = ConfigParser.getMode().equalsIgnoreCase("GUI");
