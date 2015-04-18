@@ -1,3 +1,11 @@
 java -jar %MPJ_HOME%\lib\starter.jar -np 9 -cp .;bin/ edu.utas.kit418.pengd.ParallelMatrixMultiply
 
 -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=8000
+
+javac -cp lib\mpj_lib\mpj.jar -d bin\  src\edu\utas\kit418\pengd\ParallelMatrixMultiply.java src\edu\utas\kit418\pengd\GUI.java src\edu\utas\kit418\pengd\manager\TaskManager.java src\edu\utas\kit418\pengd\model\Matrix.java src\edu\utas\kit418\pengd\utilities\ConfigParser.java
+javac -cp lib/mpj_lib/mpj.jar -d bin/  src/edu/utas/kit418/pengd/ParallelMatrixMultiply.java src/edu/utas/kit418/pengd/GUI.java src/edu/utas/kit418/pengd/manager/TaskManager.java src/edu/utas/kit418/pengd/model/Matrix.java src/edu/utas/kit418/pengd/utilities/ConfigParser.java
+
+export MPJ_HOME=/home/mpiuser/pengd/mpj
+echo $MPJ_HOME
+
+java -jar mpj/lib/starter.jar -np 3 -cp .:bin/ edu.utas.kit418.pengd.ParallelMatrixMultiply
